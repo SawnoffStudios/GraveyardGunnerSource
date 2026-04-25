@@ -1,0 +1,43 @@
+name: Update Public Source Repository
+on:
+  push:
+    branches:
+      - master
+env:
+  TARGET_REPO_OWNER: "SawnoffStudios"
+  TARGET_REPO_NAME: "GraveyardGunnerSource"
+  TARGET_BRANCH: "master"
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  UpdatePublicSourceRepository:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+          persist-credentials: false
+      - name: Install git-filter-repo
+        run: |
+          sudo apt-get install git-filter-repo
+      - name: Filter repository
+        run: |
+          git-filter-repo --path Content/BloodFX --invert-paths --force
+          git-filter-repo --path Content/Bullet_ImpactFX --invert-paths --force
+          git-filter-repo --path Content/MuzzleFlash3D --invert-paths --force
+          git-filter-repo --path Content/MuzzleFlashVDB --invert-paths --force
+          git-filter-repo --path Content/Necropolis --invert-paths --force
+          git-filter-repo --path Content/PortalFX --invert-paths --force
+          git-filter-repo --path Content/Realistic_Starter_VFX_Pack_Vol2 --invert-paths --force
+      - name: Set up Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+      - name: Add remote repository
+        run: |
+          git remote add public-source-repo https://${{ secrets.TARGET_REPO_PAT }}@github.com/${{ env.TARGET_REPO_OWNER }}/${{ env.TARGET_REPO_NAME }}.git
+      - name: Push repository
+        run: |
+          git push public-source-repo --all --force
